@@ -19,6 +19,7 @@
 
 -define(SERVER, ?MODULE).
 -define(DEFAULT_PORT, 1055).
+-define(BASE_PATH, "/tmp").
 
 -record(state, {port, lsocket, fd}).
 
@@ -100,8 +101,9 @@ handle_cast(_Msg, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info({tcp, Socket, Filename}, State) when State#state.fd =:= not_set ->
-    {ok, Fd} = file:open(Filename, [raw, binary, write]),
-    gen_tcp:send(Socket, "ok"),
+    Filepath = filename:join(?BASE_PATH, Filename),
+    {ok, Fd} = file:open(Filepath, [raw, binary, write]),
+    gen_tcp:send(Socket, term_to_binary(ok)),
     {noreply, State#state{fd = Fd}};
 handle_info({tcp, _Socket, RawData}, #state{fd = Fd} = State) ->
     ok = file:write(Fd, RawData),

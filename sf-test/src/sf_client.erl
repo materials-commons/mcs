@@ -22,9 +22,12 @@
 send_file(Filepath) ->
     %{ok, Fd} = file:open(Filepath, [raw, binary, read]),
     {ok, Socket} = gen_tcp:connect("127.0.0.1", ?DEFAULT_PORT, [binary, {packet, raw}, {active, false}]),
-    gen_tcp:send(Socket, "/tmp/out.2"),
-    {ok, Packet} = gen_tcp:recv(Socket, 2),
-    io:format("~s~n", [Packet]),
+    Basename = filename:basename(Filepath),
+    gen_tcp:send(Socket, Basename),
+    {ok, Packet} = gen_tcp:recv(Socket, 0),
+    ok = binary_to_term(Packet),
+    io:format("Sending file~n", []),
     file:sendfile(Filepath, Socket),
+    io:format("Sent file~n"),
     gen_tcp:close(Socket),
     ok.
