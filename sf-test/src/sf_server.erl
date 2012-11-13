@@ -11,17 +11,16 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
 -define(SERVER, ?MODULE).
--define(DEFAULT_PORT, 1055).
 -define(BASE_PATH, "/tmp").
 
--record(state, {port, lsocket, fd}).
+-record(state, {lsocket, fd}).
 
 %%%===================================================================
 %%% API
@@ -34,11 +33,8 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-start_link(Port) ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [Port], []).
-
-start_link() ->
-    start_link(?DEFAULT_PORT).
+start_link(LSocket) ->
+    gen_server:start_link(?MODULE, [LSocket], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -55,9 +51,8 @@ start_link() ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([Port]) ->
-    {ok, LSocket} = gen_tcp:listen(Port, [binary, {packet, raw}, {active,true}, {reuseaddr, true}]),
-    {ok, #state{port = Port, lsocket = LSocket, fd = not_set}, 0}.
+init([LSocket]) ->
+    {ok, #state{lsocket = LSocket, fd = not_set}, 0}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -110,6 +105,7 @@ handle_info({tcp, _Socket, RawData}, #state{fd = Fd} = State) ->
     {noreply, State};
 handle_info(timeout, #state{lsocket = LSocket} = State) ->
     {ok, _Socket} = gen_tcp:accept(LSocket),
+    sf_sup:start_child(),
     {noreply, State};
 handle_info({tcp_closed, _Socket}, #state{fd = Fd} = State) ->
     file:close(Fd),

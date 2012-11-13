@@ -11,7 +11,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0]).
+-export([start_link/1, start_child/0]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -29,8 +29,11 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+start_link(LSocket) ->
+    supervisor:start_link({local, ?SERVER}, ?MODULE, [LSocket]).
+
+start_child() ->
+    supervisor:start_child(?SERVER, []).
 
 %%%===================================================================
 %%% Supervisor callbacks
@@ -49,18 +52,18 @@ start_link() ->
 %%                     {error, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([]) ->
-    RestartStrategy = one_for_one,
+init([LSocket]) ->
+    RestartStrategy = simple_one_for_one,
     MaxRestarts = 0,
     MaxSecondsBetweenRestarts = 1,
 
     SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
 
-    Restart = permanent,
-    Shutdown = 2000,
+    Restart = temporary,
+    Shutdown = brutal_kill,
     Type = worker,
 
-    AChild = {sf_server, {sf_server, start_link, []},
+    AChild = {sf_server, {sf_server, start_link, [LSocket]},
               Restart, Shutdown, Type, [sf_server]},
 
     {ok, {SupFlags, [AChild]}}.

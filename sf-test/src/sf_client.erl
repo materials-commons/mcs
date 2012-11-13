@@ -25,9 +25,10 @@ send_file(Filepath) ->
     Basename = filename:basename(Filepath),
     gen_tcp:send(Socket, Basename),
     {ok, Packet} = gen_tcp:recv(Socket, 0),
+    %timer:sleep(timer:seconds(10)),
     ok = binary_to_term(Packet),
-    io:format("Sending file~n", []),
+    %io:format("Sending file~n", []),
     file:sendfile(Filepath, Socket),
-    io:format("Sent file~n"),
+    %io:format("Sent file~n"),
     gen_tcp:close(Socket),
     ok.

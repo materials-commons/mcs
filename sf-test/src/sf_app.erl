@@ -13,6 +13,8 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
+-define(DEFAULT_PORT, 1055).
+
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
@@ -34,13 +36,24 @@
 %% @end
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
-    case sf_sup:start_link() of
+    Port = get_port(),
+    {ok, LSocket} = gen_tcp:listen(Port, [binary, {packet, raw}, {active, true}, {reuseaddr, true}]),
+    case sf_sup:start_link(LSocket) of
         {ok, Pid} ->
+            sf_sup:start_child(),
             {ok, Pid};
         Error ->
-            Error
+            {error, Error}
     end.
 
+get_port() ->
+    case application:get_env(sf, port) of
+        {ok, Port} ->
+            Port;
+        undefined ->
+            ?DEFAULT_PORT
+    end.
+    
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -54,6 +67,3 @@ start(_StartType, _StartArgs) ->
 stop(_State) ->
     ok.
 
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
