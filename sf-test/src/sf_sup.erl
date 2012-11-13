@@ -50,14 +50,14 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-    RestartStrategy = simple_one_for_one,
+    RestartStrategy = one_for_one,
     MaxRestarts = 0,
     MaxSecondsBetweenRestarts = 1,
 
     SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
 
-    Restart = temporary,
-    Shutdown = brutal_kill,
+    Restart = permanent,
+    Shutdown = 2000,
     Type = worker,
 
     AChild = {sf_server, {sf_server, start_link, []},

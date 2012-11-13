@@ -56,7 +56,7 @@ start_link() ->
 %%--------------------------------------------------------------------
 init([Port]) ->
     {ok, LSocket} = gen_tcp:listen(Port, [binary, {packet, raw}, {active,true}, {reuseaddr, true}]),
-    {ok, #state{port = Port, lsocket = LSocket}, 0}.
+    {ok, #state{port = Port, lsocket = LSocket, fd = not_set}, 0}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -99,13 +99,16 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({tcp, Socket, RawData}, #state{fd = Fd} = State) ->
+handle_info({tcp, Socket, Filename}, State) when State#state.fd =:= not_set ->
+    {ok, Fd} = file:open(Filename, [raw, binary, write]),
+    gen_tcp:send(Socket, "ok"),
+    {noreply, State#state{fd = Fd}};
+handle_info({tcp, _Socket, RawData}, #state{fd = Fd} = State) ->
     ok = file:write(Fd, RawData),
     {noreply, State};
 handle_info(timeout, #state{lsocket = LSocket} = State) ->
     {ok, _Socket} = gen_tcp:accept(LSocket),
-    {ok, Fd} = file:open("/tmp/out", [raw, binary, write]),
-    {noreply, State#state{fd = Fd}};
+    {noreply, State};
 handle_info({tcp_closed, _Socket}, #state{fd = Fd} = State) ->
     file:close(Fd),
     {stop, normal, State};
