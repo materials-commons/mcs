@@ -8,6 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(sf_client).
 
+-include_lib("kernel/include/file.hrl").
+
 %% API
 -export([send_file/1]).
 
@@ -21,6 +23,8 @@
 
 send_file(Filepath) ->
     %{ok, Fd} = file:open(Filepath, [raw, binary, read]),
+    {ok, FileInfo} = file:read_file_info(Filepath),
+    io:format("Filesize: ~w~n", [FileInfo#file_info.size]),
     {ok, Socket} = gen_tcp:connect("127.0.0.1", ?DEFAULT_PORT, [binary, {packet, raw}, {active, false}]),
     Basename = filename:basename(Filepath),
     gen_tcp:send(Socket, Basename),
@@ -28,7 +32,18 @@ send_file(Filepath) ->
     %timer:sleep(timer:seconds(10)),
     ok = binary_to_term(Packet),
     %io:format("Sending file~n", []),
-    file:sendfile(Filepath, Socket),
+    {ok, Bytes} = file:sendfile(Filepath, Socket),
+    Bytes = FileInfo#file_info.size,
+    io:format("Sent: ~w~n", [Bytes]),
     %io:format("Sent file~n"),
     gen_tcp:close(Socket),
     ok.
+
+file_exists(Filepath) ->
+    case file:read_file_info(Filepath) of
+        {ok, FileInfo} ->
+            io:format("Size of file: ~w~n", [FileInfo#file_info.size]),
+            ok;
+        {error, enoent} ->
+            not_exist
+    end.
