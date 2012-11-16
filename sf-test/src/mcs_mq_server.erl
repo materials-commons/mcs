@@ -11,7 +11,7 @@
 -behaviour(gen_qserver).
 
 %% API
--export([start_link/1]).
+-export([start_link/1, process_upload_request/1]).
 
 %% gen_server callbacks
 -export([init/2, handle_call/3, handle_cast/2, handle_info/2, stop/1,
@@ -88,8 +88,16 @@ handle_call({<<Route/binary>>, Payload}, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast({<<Route/binary>>, Payload}, State) ->
     error_logger:info_msg("handle_cast - Route: ~p, Payload: ~p~n", [Route, Payload]),
-    sf_client:send_file(Payload),
+    spawn(?MODULE, process_upload_request, [Payload]),
     {noreply, State}.
+
+process_upload_request(Path) ->
+    case filelib:is_dir(Path) of
+        true ->
+            filelib:fold_files(Path, ".*", true, fun(File, Acc) -> sf_client:send_file(File), Acc end, []);
+        _ ->
+            sf_client:send_file(Path)
+    end.
 
 %%--------------------------------------------------------------------
 %% @private
