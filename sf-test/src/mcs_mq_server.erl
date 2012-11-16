@@ -72,6 +72,7 @@ init(_Args, CachePid) ->
 %%--------------------------------------------------------------------
 handle_call({<<Route/binary>>, Payload}, _From, State) ->
     error_logger:info_msg("handle_call - Route: ~p, Payload: ~p~n", [Route, Payload]),
+    sf_client:send_file(Payload),
     Reply = ok,
     {reply, Reply, State}.
 
@@ -87,6 +88,7 @@ handle_call({<<Route/binary>>, Payload}, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast({<<Route/binary>>, Payload}, State) ->
     error_logger:info_msg("handle_cast - Route: ~p, Payload: ~p~n", [Route, Payload]),
+    sf_client:send_file(Payload),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -100,6 +102,7 @@ handle_cast({<<Route/binary>>, Payload}, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info(_Info, State) ->
+    error_logger:info_msg("handle_info"),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -114,9 +117,11 @@ handle_info(_Info, State) ->
 %% @end
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
+    error_logger:info_msg("terminate"),
     ok.
 
 stop(Pid) ->
+    error_logger:info_msg("stop"),
     gen_qserver:cast(Pid, stop).
 
 %%--------------------------------------------------------------------
@@ -128,6 +133,7 @@ stop(Pid) ->
 %% @end
 %%--------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
+    error_logger:info_msg("code_change"),
     {ok, State}.
 
 %%%===================================================================
