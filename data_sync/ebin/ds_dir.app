@@ -1,4 +1,4 @@
-{application, data_sync,
+{application, ds_dir,
  [
   {description, ""},
   {vsn, "1"},
@@ -8,6 +8,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { data_sync_app, []}},
+  {mod, { ds_dir_app, []}},
   {env, []}
  ]}.
