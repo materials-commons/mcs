@@ -1,7 +1,11 @@
 {application, mcs,
  [
-  {description, ""},
+  {description, "mcs app"},
   {vsn, "1"},
+  {modules, [
+                ds_dir_sup,
+                ds_dir
+            ]},
   {registered, []},
   {applications, [
                   kernel,

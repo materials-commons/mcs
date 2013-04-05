@@ -1,7 +1,7 @@
 -module(ranch_ftp_protocol).
 -export([start_link/4, init/3]).
 
-start_link(ListenerPid, Socket, Transport, Opts) ->
+start_link(ListenerPid, Socket, Transport, _Opts) ->
     Pid = spawn_link(?MODULE, init, [ListenerPid, Socket, Transport]),
     {ok, Pid}.
 
@@ -15,15 +15,15 @@ init(ListenerPid, Socket, Transport) ->
 auth(Socket, Transport, <<"USER ", Rest/bits>>) ->
     io:format("User authenticated ~p~n", [Rest]),
     Transport:send(Socket, <<"230 Auth Ok\r\n">>),
-    loop(Socket, Transport).
+    loop(Socket, Transport, []).
 
-loop(Socket, Transport) ->
+loop(Socket, Transport, Buffer) ->
     case Transport:recv(Socket, 0, 30000) of
         {ok, Data} ->
             Buffer2 = << Buffer/binary, Data/binary >>,
-            {Commands, Rest} = split(Buffer2),
-            [handle(Socket, Transport, Commmand) || Command <- Commands],
-            loop(Socket, Transport);
+            {Commands, _Rest} = split(Buffer2),
+            [handle(Socket, Transport, Command) || Command <- Commands],
+            loop(Socket, Transport, Buffer2);
         {error, _} ->
             io:format("The client disconnected~n")
     end.
@@ -31,3 +31,6 @@ loop(Socket, Transport) ->
 handle(Socket, Transport, Data) ->
     io:format("Command received: ~p~n", [Data]),
     Transport:send(Socket, <<"500 Bad Command\r\n">>).
+
+split(_Buffer) ->
+    {"OK", "OK"}.
