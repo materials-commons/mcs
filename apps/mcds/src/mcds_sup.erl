@@ -4,7 +4,9 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/2]).
+-export([start_link/3]).
+
+-define(SERVER, ?MODULE).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -16,17 +18,17 @@
 %% API functions
 %% ===================================================================
 
-start_link(Port, Server) ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, Server]).
+start_link(LSock, Queue, Server) ->
+    supervisor:start_link(?SERVER, ?MODULE, [LSock, Queue, Server]).
 
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
 
-init([Port, Server]) ->
-    MCDS_Console_Sup = {mcds_console_sup, {mcds_console_sup, start_link, [Port]},
+init([LSock, Queue, Server]) ->
+    MCDS_Console_Sup = {mcds_console_sup, {mcds_console_sup, start_link, [LSock]},
                 permanent, 2000, supervisor, [mcds_console_sup]},
-    MCDS_Queue_Sup = {mcd_queue_sup, {mcds_queue_sup, start_link, [Server]},
+    MCDS_Queue_Sup = {mcd_queue_sup, {mcds_queue_sup, start_link, [Queue, Server]},
                         permanent, 2000, supervisor, [mcds_queue_sup]},
     Children = [MCDS_Console_Sup, MCDS_Queue_Sup],
     RestartStrategy = {one_for_one, 4, 3600},
