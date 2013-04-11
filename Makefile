@@ -2,7 +2,7 @@ APPS = kernel stdlib sasl erts ssl tools os_mon runtime_tools crypto inets \
 	public_key mnesia syntax_tools compiler
 COMBO_PLT = $(HOME)/.mcs_combo_dialyzer_plt
 
-.PHONY: deps test
+.PHONY: deps test rel
 
 all: deps compile
 
@@ -18,12 +18,12 @@ generate:
 rel: deps compile generate
 
 relclean:
-	rm -rf rel
+	rm -rf rel/mcs
 
-clean:
+clean: distclean
 	./rebar clean
 
-distclean: clean
+distclean:
 	./rebar delete-deps
 
 test: all
