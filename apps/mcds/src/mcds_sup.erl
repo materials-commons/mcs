@@ -28,9 +28,9 @@ start_link(LSock, Queue, Server) ->
 init([LSock, Queue, Server]) ->
     MCDS_Console_Sup = {mcds_console_sup, {mcds_console_sup, start_link, [LSock]},
                 permanent, 2000, supervisor, [mcds_console_sup]},
-    MCDS_Queue_Sup = {mcd_queue_sup, {mcds_queue_sup, start_link, [Queue, Server]},
-                        permanent, 2000, supervisor, [mcds_queue_sup]},
-    Children = [MCDS_Console_Sup, MCDS_Queue_Sup],
+    MCDS_Sync_Sup = {mcds_sync_sup, {mcds_sync_sup, start_link, [Queue, Server]},
+                        permanent, 2000, supervisor, [mcds_sync_sup]},
+    Children = [MCDS_Console_Sup, MCDS_Sync_Sup],
     RestartStrategy = {one_for_one, 4, 3600},
     {ok, { RestartStrategy, Children}}.
 
