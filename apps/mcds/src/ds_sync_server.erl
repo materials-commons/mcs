@@ -23,7 +23,7 @@
 
 start_link(Queue, Server) ->
     Port = mc_config:get_env_default(stomp_port, ?DEFAULT_STOMP_PORT),
-    Username = mc_config:get_env_default(stomp_username, ?DEFAULT_STOMP_USERNAME)
+    Username = mc_config:get_env_default(stomp_username, ?DEFAULT_STOMP_USERNAME),
     Password = mc_config:get_env_default(stomp_password, ?DEFAULT_STOMP_PASSWORD),
     gen_stomp:start_link(?MODULE, Server, Port, Username, Password, [{Queue, []}], []).
 
